@@ -1,21 +1,24 @@
-importScripts('js/js-utils.js');
+// imports
+importScripts('js/sw-utils.js');
 
-const STATIC_CACHE = 'static-v1';
-const DYNAMIC_CACHE = 'dynamic-v1';
+
+const STATIC_CACHE = 'static-v4';
+const DYNAMIC_CACHE = 'dynamic-v2';
 const INMUTABLE_CACHE = 'inmutable-v1';
+
 
 const APP_SHELL = [
     // '/',
     'index.html',
     'css/style.css',
     'img/favicon.ico',
-    'img/avatars/wolverine.jpg',
-    'img/avatars/thor.jpg',
-    'img/avatars/spiderman.jpg',
-    'img/avatars/ironman.jpg',
     'img/avatars/hulk.jpg',
+    'img/avatars/ironman.jpg',
+    'img/avatars/spiderman.jpg',
+    'img/avatars/thor.jpg',
+    'img/avatars/wolverine.jpg',
     'js/app.js',
-    'js/js-utils.js'
+    'js/sw-utils.js'
 ];
 
 const APP_SHELL_INMUTABLE = [
@@ -27,51 +30,70 @@ const APP_SHELL_INMUTABLE = [
 ];
 
 
-self.addEventListener('install', event => {
 
-    const cacheStatic = caches.open(STATIC_CACHE).then(cache => {
-        cache.addAll(APP_SHELL)
-    });
-    const cacheInmutable = caches.open(INMUTABLE_CACHE).then(cache => {
-        cache.addAll(APP_SHELL_INMUTABLE)
-    });
+self.addEventListener('install', e => {
 
-    event.waitUntil(Promise.all([cacheStatic, cacheInmutable]));
+
+    const cacheStatic = caches.open(STATIC_CACHE).then(cache =>
+        cache.addAll(APP_SHELL));
+
+    const cacheInmutable = caches.open(INMUTABLE_CACHE).then(cache =>
+        cache.addAll(APP_SHELL_INMUTABLE));
+
+
+
+    e.waitUntil(Promise.all([cacheStatic, cacheInmutable]));
+
 });
 
 
-self.addEventListener('activate', event => {
+self.addEventListener('activate', e => {
 
     const respuesta = caches.keys().then(keys => {
+
         keys.forEach(key => {
+
             if (key !== STATIC_CACHE && key.includes('static')) {
                 return caches.delete(key);
             }
-        });
-    })
 
-    event.waitUntil(respuesta)
+            if (key !== DYNAMIC_CACHE && key.includes('dynamic')) {
+                return caches.delete(key);
+            }
+
+        });
+
+    });
+
+    e.waitUntil(respuesta);
+
 });
 
-self.addEventListener('fetch', event => {
 
 
-    const respuesta = caches.match(event.request).then(res => {
+
+self.addEventListener('fetch', e => {
+
+
+    const respuesta = caches.match(e.request).then(res => {
+
         if (res) {
             return res;
         } else {
 
-            return fetch(event.request).then(newRes => {
-                return actualizaCacheDinamico(DYNAMIC_CACHE, event.request, newRes);
-            })
+            return fetch(e.request).then(newRes => {
+
+                return actualizaCacheDinamico(DYNAMIC_CACHE, e.request, newRes);
+
+            });
 
         }
-    })
+
+    });
 
 
 
-    event.respondWith(respuesta);
-    // event.waitUntil(
+    e.respondWith(respuesta);
 
-    // );
 });
+
