@@ -1,6 +1,15 @@
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').then(reg => {
+
+        var url = window.location.href;
+        var swLocation = '/twitor/sw.js';
+
+        if (url.includes('localhost')) {
+            swLocation = '/sw.js';
+        }
+
+
+        navigator.serviceWorker.register(swLocation).then(reg => {
             console.log('Registration successful', reg);
         })
             .catch(e => console.error('Error during service worker registration:', e));
